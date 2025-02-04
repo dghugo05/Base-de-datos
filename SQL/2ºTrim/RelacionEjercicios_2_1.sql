@@ -1,5 +1,7 @@
 --Hugo de Cristóbal Gómez
 USE instituto;
+
+--SELECT
 --Ejercicio1
 
 SELECT * FROM alumno
@@ -86,3 +88,38 @@ SELECT fecha_nacimiento, Nombre_Día = DATENAME(weekday, fecha_nacimiento), Nombr
 --Ejercicio19
 
 SELECT Fecha_Nacimiento, Días_Desde_Nacimiento = DATEDIFF(DAYOFYEAR, fecha_nacimiento, GETDATE()) FROM alumno;
+
+
+--GROUP BY
+
+--Ejercicio1
+
+SELECT es_repetidor, COUNT(es_repetidor) AS numero_alumnos
+FROM alumno
+GROUP BY es_repetidor;
+
+--Ejercicio2
+
+SELECT YEAR(fecha_nacimiento) AS año_nacimiento, COUNT(YEAR(fecha_nacimiento)) AS numero_alumnos
+FROM alumno
+GROUP BY YEAR(fecha_nacimiento);
+
+--Ejercicio3
+
+SELECT SUBSTRING(apellido1, 1, 1), COUNT(SUBSTRING(apellido1,1,1))
+FROM alumno
+GROUP BY SUBSTRING(apellido1,1,1);
+
+--Ejercicio4
+
+SELECT es_repetidor, AVG(DATEDIFF(YEAR, fecha_nacimiento, GETDATE())) AS edad_promedio
+FROM alumno
+GROUP BY es_repetidor;
+
+--Ejercicio5
+
+SELECT MONTH(fecha_nacimiento) AS mes_nacimiento, COUNT(MONTH(fecha_nacimiento)) AS numero_alumnos
+FROM alumno
+GROUP BY MONTH(fecha_nacimiento);
+
+SELECT * FROM alumno;
