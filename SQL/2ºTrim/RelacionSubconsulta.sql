@@ -78,7 +78,91 @@ WHERE altura > (
 	WHERE nombre_equipo = 'Timberwolves')
 AND nombre_equipo = 'Timberwolves';
 
---Ejercicio 07 
+--Ejercicio 07
+
+SELECT nombre
+FROM equipo
+WHERE nombre IN (
+	SELECT nombre_equipo
+	FROM jugador
+	WHERE peso > 250)
+AND nombre LIKE 'C%';
+
+--Ejercicio 08
+
+SELECT nombre
+FROM jugador
+WHERE codigo IN (
+	SELECT jugador
+	FROM estadistica
+	WHERE puntos_por_partido >(
+		SELECT AVG(puntos_por_partido)
+		FROM estadistica
+		WHERE temporada = '06/07')
+	AND temporada = '06/07'
+		)
+;
+
+--Ejercicio 09
+
+SELECT nombre
+FROM jugador
+WHERE codigo IN(
+	SELECT jugador
+	FROM estadistica
+	WHERE rebotes_por_partido >= 1
+	AND temporada = '07/08');
+
+--Ejercicio 10
+
+SELECT nombre
+FROM jugador
+WHERE codigo IN(
+	SELECT jugador
+	FROM estadistica
+	WHERE puntos_por_partido >10
+	AND temporada = '04/05');
+
+--Ejercicio 11
+
+SELECT nombre
+FROM jugador
+WHERE codigo IN(
+	SELECT jugador
+	FROM estadistica	
+	WHERE asistencias_por_partido < 3
+	AND temporada = '03/04');
+
+--Ejercicio 12
+
+SELECT nombre
+FROM jugador
+WHERE codigo IN(
+	SELECT jugador
+	FROM estadistica
+	WHERE puntos_por_partido > (
+		SELECT AVG(puntos_por_partido)
+		FROM estadistica
+		WHERE temporada = '07/08')
+	AND temporada = '07/08');
+
+--Ejercicio 13
+
+SELECT nombre
+FROM jugador
+WHERE codigo IN(
+	SELECT jugador
+	FROM estadistica
+	WHERE puntos_por_partido >= 10)
+AND nombre_equipo IN(
+	SELECT nombre
+	FROM equipo
+	WHERE nombre IN(
+		SELECT equipo_visitante
+		FROM partido)
+	AND conferencia = 'East');
+
 
 SELECT * FROM estadistica;
+SELECT * FROM equipo;
 
