@@ -76,7 +76,6 @@ WHERE altura > (
 	SELECT AVG(altura)
 	FROM jugador
 	WHERE nombre_equipo = 'Timberwolves')
-AND nombre_equipo = 'Timberwolves';
 
 --Ejercicio 07
 
@@ -148,21 +147,69 @@ WHERE codigo IN(
 
 --Ejercicio 13
 
-SELECT nombre
+SELECT *
 FROM jugador
 WHERE codigo IN(
 	SELECT jugador
 	FROM estadistica
-	WHERE puntos_por_partido >= 10)
+	GROUP BY jugador 
+	HAVING AVG(puntos_por_partido) >= 10)
 AND nombre_equipo IN(
 	SELECT nombre
 	FROM equipo
 	WHERE nombre IN(
 		SELECT equipo_visitante
 		FROM partido)
-	AND conferencia = 'East');
+	AND conferencia = 'East')
+ORDER BY codigo;
+
+--Ejercicio 14
+
+SELECT nombre
+FROM jugador
+WHERE codigo IN (
+	SELECT jugador
+	FROM estadistica
+	WHERE temporada = '07/08'
+	GROUP BY jugador
+	HAVING SUM(puntos_por_partido) > (
+		SELECT AVG(puntos_por_partido)
+		FROM estadistica
+		WHERE temporada = '07/08'));
+
+--Ejercicio 15
+
+SELECT nombre
+FROM jugador
+WHERE codigo IN (
+	SELECT jugador
+	FROM estadistica
+	WHERE temporada = '05/06'
+	OR temporada = '5.6'
+	GROUP BY jugador
+	HAVING SUM(asistencias_por_partido) < 5);
+
+--Ejercicio 16
+SELECT nombre
+FROM jugador
+WHERE codigo IN(
+ SELECT jugador
+ FROM estadistica
+ WHERE puntos_por_partido >(
+	SELECT AVG(puntos_por_partido)
+	FROM estadistica
+	WHERE jugador IN (
+		SELECT codigo
+		FROM jugador
+		WHERE nombre_equipo IN (
+			SELECT nombre
+			FROM equipo
+			WHERE nombre = 'Raptors'))))
+ORDER BY nombre;
 
 
-SELECT * FROM estadistica;
+
+SELECT * FROM estadistica
+WHERE jugador = 1;
 SELECT * FROM equipo;
 
