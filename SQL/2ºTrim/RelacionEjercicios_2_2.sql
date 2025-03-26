@@ -279,6 +279,252 @@ RIGHT JOIN producto ON producto.cod_fabricante = fabricante.codigo;
 
 --Ejercicio14
 
+SELECT fabricante.nombre, producto.nombre
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo;
 
+--Ejercicio15
 
+SELECT fabricante.nombre, producto.nombre
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+WHERE producto.precio > 150;
 
+--Ejercicio16
+
+SELECT fabricante.nombre, producto.nombre
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+WHERE producto.nombre LIKE '%drive%';
+
+--Ejercicio17
+
+SELECT fabricante.nombre, producto.nombre
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+WHERE fabricante.nombre LIKE 'C%';
+
+--Ejercicio18
+
+SELECT producto.nombre, fabricante.nombre, producto.precio
+FROM producto
+INNER JOIN fabricante ON producto.cod_fabricante = fabricante.codigo
+WHERE producto.precio > 100
+ORDER BY producto.precio ASC;
+
+--Ejercicio19
+
+SELECT AVG(producto.precio), MIN(producto.precio), MAX(producto.precio), COUNT(producto.nombre)
+FROM producto
+INNER JOIN fabricante ON fabricante.codigo = producto.cod_fabricante
+WHERE fabricante.nombre = 'Seagate';
+
+--Ejercicio20
+
+SELECT fabricante.codigo, fabricante.nombre, producto.*, fabricante.codigo
+FROM producto
+LEFT JOIN fabricante ON fabricante.codigo = producto.cod_fabricante
+ORDER BY fabricante.codigo ASC;
+
+--Ejercicio21
+
+SELECT fabricante.codigo, fabricante.nombre, producto.*, fabricante.codigo
+FROM producto
+LEFT JOIN fabricante ON fabricante.codigo = producto.cod_fabricante
+WHERE producto.nombre IS NULL
+ORDER BY fabricante.codigo ASC;
+
+--GROUP BY
+--Ejercicio1
+
+SELECT COUNT(producto.nombre), fabricante.codigo
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.codigo;
+
+--Ejercicio2
+
+SELECT fabricante.codigo, MIN(producto.precio), MAX(producto.precio), CAST(AVG(producto.precio) AS decimal(10,2)) 
+FROM producto
+INNER JOIN fabricante ON fabricante.codigo = producto.cod_fabricante
+GROUP BY fabricante.codigo;
+
+--Ejercicio3
+
+SELECT precio, COUNT(nombre)
+FROM producto
+GROUP BY precio
+ORDER BY precio DESC;
+
+--Ejercicio4
+
+SELECT fabricante.nombre, COUNT(producto.nombre) AS numeroProds
+FROM fabricante
+RIGHT JOIN producto ON fabricante.codigo = producto.cod_fabricante
+GROUP BY fabricante.nombre
+ORDER BY numeroProds DESC;
+
+--Ejercicio5
+
+SELECT fabricante.nombre, MAX(producto.precio), MIN(producto.precio), AVG(producto.precio)
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.nombre;
+
+--Ejercicio6
+
+SELECT fabricante.codigo, MAX(producto.precio), MIN(producto.precio), AVG(producto.precio) AS media, COUNT(producto.nombre)
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.codigo
+HAVING AVG(producto.precio) > 200;
+
+--Ejercicio7
+
+SELECT fabricante.nombre, MAX(producto.precio), MIN(producto.precio), AVG(producto.precio) AS media, COUNT(producto.nombre)
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.nombre
+HAVING AVG(producto.precio) > 200;
+
+--Ejercicio8
+
+SELECT fabricante.nombre, COUNT(producto.nombre)
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+WHERE producto.precio >= 180
+GROUP BY fabricante.nombre;
+
+--Ejercicio9
+
+SELECT fabricante.nombre, AVG(producto.precio)
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.nombre;
+
+--Ejercicio10
+
+SELECT fabricante.nombre
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.nombre
+HAVING AVG(producto.precio) >= 150;
+
+--Ejercicio11
+
+SELECT fabricante.nombre
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.nombre
+HAVING COUNT(producto.nombre) >= 2;
+
+--Ejercicio12
+
+SELECT fabricante.nombre, COUNT(producto.precio)
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+WHERE producto.precio >= 220
+GROUP BY fabricante.nombre;
+
+--Ejercicio13
+
+SELECT fabricante.nombre
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.nombre
+HAVING SUM(producto.precio) > 1000;
+
+--Ejercicio14
+
+SELECT nombre, CAST(AVG(precio)AS DECIMAL(10,2))
+FROM producto
+WHERE nombre LIKE 'DVD%'
+GROUP BY nombre;
+
+--Ejercicio15
+
+SELECT fabricante.codigo, fabricante.nombre, COUNT(producto.nombre)
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.codigo, fabricante.nombre;
+
+--Ejercicio16
+
+SELECT fabricante.nombre, COUNT(producto.nombre)
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+WHERE producto.precio <= 200
+GROUP BY fabricante.nombre;
+
+--Ejercicio17
+
+SELECT fabricante.nombre, SUM(producto.precio)
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+WHERE producto.precio > 100
+GROUP BY fabricante.nombre;
+
+--Ejercicio18
+
+SELECT fabricante.nombre, CAST(AVG(producto.precio)AS DECIMAL(10,2)), MAX(producto.precio)
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.nombre
+HAVING MAX(producto.precio) > 100;
+
+--Ejercicio19
+
+SELECT fabricante.nombre, CAST(AVG(producto.precio) AS DECIMAL(10,2))
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.nombre
+HAVING COUNT(producto.precio) > 2
+AND AVG(producto.precio) >= 150;
+
+--Ejercicio20
+
+SELECT fabricante.nombre, CAST(AVG(producto.precio)AS DECIMAL(10,2))
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+WHERE fabricante.nombre LIKE '%t%'
+GROUP BY fabricante.nombre;
+
+--Ejercicio21
+
+SELECT fabricante.codigo, fabricante.nombre, COUNT(producto.nombre) AS totalProds
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.codigo, fabricante.nombre
+ORDER BY totalProds DESC;
+
+--Ejercicio22
+
+SELECT TOP 3 fabricante.codigo, fabricante.nombre, COUNT(producto.nombre) AS totalProds
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.codigo, fabricante.nombre
+ORDER BY totalProds DESC;
+
+--Ejercicio23
+
+SELECT fabricante.codigo, fabricante.nombre, MAX(producto.precio), MIN(producto.precio), CAST(AVG(producto.precio) AS decimal(10,2))
+FROM fabricante
+INNER JOIN producto ON producto.cod_fabricante = fabricante.codigo
+WHERE fabricante.nombre LIKE 'F%'
+OR fabricante.nombre LIKE 'A%'
+GROUP BY fabricante.codigo, fabricante.nombre;
+
+--Ejercicio24
+
+SELECT fabricante.nombre, CAST(AVG(producto.precio) AS decimal(10,2)) AS preiocMed
+FROM producto
+INNER JOIN fabricante ON producto.cod_fabricante = fabricante.codigo
+GROUP BY fabricante.nombre
+ORDER BY preiocMed ASC;
+
+--Ejercicio25
+
+SELECT fabricante.nombre, COUNT(producto.nombre)
+FROM fabricante
+LEFT JOIN producto ON producto.cod_fabricante = fabricante.codigo AND producto.precio >= 220
+GROUP BY fabricante.nombre
