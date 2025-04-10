@@ -320,7 +320,7 @@ USE universidad;
 
 --Ejercicio 01
 
-CREATE PROC uni01
+CREATE OR ALTER PROC uni01
 @nombre NVARCHAR(50),
 @apellido1 NVARCHAR(50),
 @apellido2 NVARCHAR(50),
@@ -335,13 +335,32 @@ BEGIN
 								FROM persona
 								WHERE nombre = @nombre
 								AND apellido1 = @apellido1
-								AND apellido2 = @apellido2),
+								AND apellido2 = @apellido2
+								AND tipo = 'profesor'),
 
 			@sexoprof NVARCHAR(2) = (SELECT sexo
 									FROM persona
 									WHERE nombre = @nombre
 									AND apellido1 = @apellido1
-									AND apellido2 = @apellido2);
+									AND apellido2 = @apellido2
+									AND tipo = 'profesor');
+	IF NOT EXISTS(SELECT id
+					FROM persona
+					WHERE nombre = @nombre
+					AND apellido1 = @apellido1
+					AND apellido2 = @apellido2
+					AND tipo = 'profesor')
+		BEGIN
+			THROW 50001, 'El profesor o profesora no existe en la base de datos.', 1;
+			RETURN;
+		END
+	IF NOT EXISTS(SELECT id
+				FROM departamento
+				WHERE nombre = @departament)
+		BEGIN
+			THROW 50002, 'El departamento especificado no existe.', 1;
+			RETURN;
+		END
 	UPDATE profesor
 	SET id_departamento = @codigodept
 	WHERE id_profesor = @codigoprof;
@@ -353,5 +372,374 @@ BEGIN
 	
 END
 
-EXEC uni01 @nombre = 'David', @apellido1 = 'Schmidt', @apellido2 = 'Fisher', @departament = 'Informática';
+EXEC uni01 @nombre = 'David', @apellido1 = 'Schmidt', @apellido2 = 'Fisher', @departament = 'Electrónica';
 
+
+--Ejercicio 02
+
+CREATE OR ALTER PROC uni02 
+@nombre_grado NVARCHAR(200)
+AS
+BEGIN 
+	DECLARE @nombre_asig NVARCHAR(200),
+		@creditos INT,
+		@tipo NVARCHAR(50),
+		@curso INT,
+		@cuatrimestre INT
+
+	IF NOT EXISTS(SELECT id
+				FROM grado
+				WHERE nombre = @nombre_grado)
+		BEGIN
+			THROW 50001, 'El grado especificado no existe', 1;
+			RETURN;
+		END
+
+	DECLARE cursor_uni02 CURSOR FOR
+		SELECT nombre, creditos, tipo, curso, cuatrimestre
+		FROM asignatura
+		WHERE id_grado IN(
+						SELECT id
+						FROM grado
+						WHERE nombre = @nombre_grado)
+		GROUP BY nombre, creditos, tipo, curso, cuatrimestre
+		ORDER BY curso, cuatrimestre;
+	
+	OPEN cursor_uni02;
+	FETCH NEXT FROm cursor_uni02 INTO @nombre_asig, @creditos, @tipo, @curso, @cuatrimestre
+	IF(@@FETCH_STATUS = 0)
+	BEGIN
+		PRINT 'Asignaturas del grado "' +  @nombre_grado + '":';
+		WHILE(@@FETCH_STATUS = 0)
+			BEGIN
+				PRINT 'Asignatura :' + @nombre_asig + ', créditos: ' + CAST(@creditos AS NVARCHAR(10)) + ', tipo: ' + @tipo + ', curso: ' + CAST(@curso AS NVARCHAR(10)) + ', cuatrimestre: ' + CAST(@cuatrimestre AS NVARCHAR(10));
+				FETCH NEXT FROm cursor_uni02 INTO @nombre_asig, @creditos, @tipo, @curso, @cuatrimestre;
+			END
+	END
+	CLOSE cursor_uni02;
+	DEALLOCATE cursor_uni02;
+END
+
+EXEC uni02 @nombre_grado = 'Grado en Ingeniería Informática (Plan 2015)';
+
+
+--Pelicuilas
+
+USE peliculas;
+
+--Ejercicio 01
+
+CREATE OR ALTER PROC peli01
+@año INT
+AS
+BEGIN
+	
+	DECLARE @titulo NVARCHAR(100),
+		@duracion INT,
+		@fecha DATE
+
+	IF NOT EXISTS(SELECT peli_id
+					FROM pelicula
+					WHERE peli_anio = @año)
+		BEGIN
+			PRINT 'No se encontraron películas para el año ' + CAST(@año AS NVARCHAR(10));
+			RETURN;
+		END
+
+	DECLARE cursor_peli01 CURSOR FOR
+		SELECT peli_titulo, peli_duracion, peli_estreno
+		FROm pelicula
+		WHERE peli_anio = @año;
+
+	OPEN cursor_peli01
+	FETCH NEXT FROM cursor_peli01 INTO @titulo, @duracion, @fecha
+
+	IF(@@FETCH_STATUS = 0)
+		BEGIN
+			PRINT 'Películas del año ' + CAST(@año AS NVARCHAR(10)) + ':';
+
+			WHILE(@@FETCH_STATUS = 0)
+				BEGIN
+					PRINT 'Título: ' + @titulo + ',año de estreno: ' + CAST(@año AS NVARCHAR(10)) + ', duración: ' + CAST(@duracion AS NVARCHAR(20)) + ', fecha de estreno: ' + CAST(@fecha AS NVARCHAR(100))
+					FETCH NEXT FROM cursor_peli01 INTO @titulo, @duracion, @fecha
+				END
+		END
+		CLOSE cursor_peli01;
+		DEALLOCATE cursor_peli01;
+END
+
+EXEC peli01 @año = 1950
+
+
+--Ejercicio 02
+
+CREATE OR ALTER PROC peli02
+@genero NVARCHAR(50)
+AS
+BEGIN
+	
+	DECLARE @numero_pelis INT = (SELECT COUNT(gen_id)
+								FROM peli_genero
+								WHERE gen_id IN(SELECT gen_id
+												FROM genero
+												WHERE gen_titulo = @genero)),
+			@titulo_peli NVARCHAR(100),
+			@año INT,
+			@duracion INT
+
+	IF NOT EXISTS(SELECT gen_id
+					FROM genero
+					WHERE gen_titulo = @genero)
+		BEGIN
+			THROW 50001, 'El género especificado no existe.', 1;
+			RETURN;
+		END
+
+	DECLARE cursor_peli02 CURSOR FOR
+		SELECT peli_titulo, peli_anio, peli_duracion
+		FROM pelicula
+		WHERE peli_id IN(SELECT peli_id
+					FROM peli_genero
+					WHERE gen_id IN(SELECT gen_id
+									FROM genero
+									WHERE gen_titulo = @genero))
+		GROUP BY peli_titulo, peli_anio, peli_duracion
+		ORDER BY peli_titulo DESC
+	OPEN cursor_peli02;
+	FETCH NEXT FROM cursor_peli02 INTO @titulo_peli, @año, @duracion
+	
+	IF(@@FETCH_STATUS = 0)
+		PRINT 'El número de películas del género "' + @genero + '" es: ' + CAST(@numero_pelis AS NVARCHAR(10));
+		PRINT 'Lista de películas del género "' + @genero + '":';
+
+		BEGIN
+			WHILE(@@FETCH_STATUS = 0)
+				BEGIN
+					PRINT 'Título: ' + @titulo_peli + ', Año: ' + CAST(@año AS NVARCHAR(10)) + ', Duración: ' + CAST(@duracion AS NVARCHAR(20)) + ' minutos'
+					FETCH NEXT FROM cursor_peli02 INTO @titulo_peli, @año, @duracion
+				END
+		END
+		CLOSE cursor_peli02;
+		DEALLOCATE cursor_peli02;
+END
+
+EXEC peli02 @genero = 'Ciber';
+
+
+--Ejercicio 03
+
+CREATE OR ALTER PROC peli03
+@director NVARCHAR(150)
+AS
+BEGIN
+	
+	DECLARE @titulo NVARCHAR(150)
+
+	IF NOT EXISTS(SELECT dir_id
+					FROM director
+					GROUP BY dir_nombre, dir_apellidos, dir_id
+					HAVING CONCAT(dir_nombre, ' ', dir_apellidos) = @director)
+		BEGIN
+			THROW 50001, 'El director especificado no existe.',1;
+			RETURN;
+		END
+
+	DECLARE cursor_peli02 CURSOR FOR
+		SELECT peli_titulo
+		FROM pelicula
+		WHERE peli_id IN(
+						SELECT peli_id
+						FROM peli_dir
+						WHERE dir_id IN(
+										SELECT dir_id
+										FROM director
+										GROUP BY dir_nombre, dir_apellidos, dir_id
+										HAVING CONCAT(dir_nombre, ' ', dir_apellidos) = @director))
+
+	OPEN cursor_peli02
+	FETCH NEXT FROM cursor_peli02 INTO @titulo
+
+	IF(@@FETCH_STATUS = 0)
+	BEGIN
+		PRINT 'Películas del director"' + @director + '":'
+		WHILE(@@FETCH_STATUS = 0)
+		BEGIN
+			PRINT 'Título: ' + @titulo
+			FETCH NEXT FROM cursor_peli02 INTO @titulo
+		END
+	END
+	CLOSE cursor_peli02;
+	DEALLOCATE cursor_peli02
+END
+
+EXEC peli03 @director = 'Corleone';
+
+
+--Ejercicio 04
+
+CREATE OR ALTER PROC peli04
+@genero1 NVARCHAR(100),
+@genero2 NVARCHAR(100)
+AS
+BEGIN
+	
+	DECLARE @titulo NVARCHAR(150),
+	@año INT,
+	@valoracion INT,
+	@media_contraria DECIMAL(10,2)= (SELECT AVG(val_estrellas)
+									FROM valoracion
+									WHERE peli_id IN(SELECT peli_id
+													FROM pelicula
+													WHERE peli_id IN(
+																	SELECT peli_id
+																	FROM peli_genero
+																	WHERE gen_id IN(
+																					SELECT gen_id
+																					FROM genero
+																					WHERE gen_titulo = 'Drama'))))
+
+	IF NOT EXISTS(SELECT gen_id
+					FROM genero
+					WHERE gen_titulo = @genero1)
+		BEGIN
+			THROW 50001, 'El primer género no existe en la base de datos', 1;
+			RETURN;
+		END
+	IF NOT EXISTS(SELECT gen_id
+					FROM genero
+					WHERE gen_titulo = @genero2)
+		BEGIN
+			THROW 50002, 'El segundo género no existe en la base de datos', 1;
+			RETURN;
+		END
+	
+	DECLARE cursor_peli04 CURSOR FOR
+	SELECT pelicula.peli_titulo, pelicula.peli_anio, valoracion.val_estrellas
+	FROM pelicula
+	INNER JOIN valoracion ON valoracion.peli_id = pelicula.peli_id
+	INNER JOIN peli_genero ON peli_genero.peli_id = pelicula.peli_id
+	INNER JOIN genero ON genero.gen_id = peli_genero.gen_id
+	WHERE genero.gen_titulo = @genero1
+	AND valoracion.val_estrellas > @media_contraria
+	GROUP BY pelicula.peli_titulo, pelicula.peli_anio, valoracion.val_estrellas
+	ORDER BY pelicula.peli_titulo
+
+	OPEN cursor_peli04;
+	FETCH NEXT FROM cursor_peli04 INTO @titulo, @año, @valoracion
+
+	IF(@@FETCH_STATUS = 0)
+	BEGIN
+		PRINT 'Películas del género ' + @genero1 + ' con valoración superior a la media del género ' + @genero2 + ' (' + CAST(@media_contraria AS NVARCHAR(10)) + '):';
+		PRINT '-------------------------------------------------------------';
+
+		WHILE(@@FETCH_STATUS = 0)
+		BEGIN 
+			PRINT 'Título: ' + @titulo + ', Año: ' + CAST(@año AS NVARCHAR(20)) + ', Valoración: ' + CAST(@valoracion AS NVARCHAR(10));
+			FETCH NEXT FROM cursor_peli04 INTO @titulo, @año, @valoracion
+		END
+	END
+	CLOSE cursor_peli04;
+	DEALLOCATE cursor_peli04;
+END
+
+EXEC peli04 @genero1 = 'Acción', @genero2 = 'Ciber';
+
+
+--Ejercicio 05
+
+CREATE OR ALTER PROC peli05
+@nombre_actor NVARCHAR(50),
+@apellido_actor NVARCHAR(50)
+AS
+BEGIN
+	
+	DECLARE @titulo NVARCHAR(50),
+	@papel NVARCHAR(50)
+
+	IF NOT EXISTS(SELECT act_id
+					FROM actor
+					WHERE act_nombre = @nombre_actor
+					AND act_apellidos = @apellido_actor)
+	BEGIN
+		THROW 50001, 'El actor no existe en la base de datos.', 1;
+		RETURN;
+	END
+
+	DECLARE cursor_peli05 CURSOR FOR
+	SELECT pelicula.peli_titulo, peli_elenco.papel
+	FROM pelicula
+	INNER JOIN peli_elenco ON peli_elenco.peli_id = pelicula.peli_id
+	INNER JOIN actor ON peli_elenco.act_id = actor.act_id
+	WHERE actor.act_nombre = @nombre_actor
+	AND actor.act_apellidos = @apellido_actor
+
+	OPEN cursor_peli05;
+	FETCH NEXT FROM cursor_peli05 INTO @titulo, @papel
+
+	IF(@@FETCH_STATUS = 0)
+	BEGIN
+		PRINT 'Papeles interpretados por ' + @nombre_actor + ' ' + @apellido_actor + ':'
+		PRINT '-------------------------------------------------------------------------------------';
+
+		WHILE(@@FETCH_STATUS = 0)
+		BEGIN
+			PRINT 'Película: ' + @titulo + ', Papel: ' + @papel;
+			FETCH NEXT FROM cursor_peli05 INTO @titulo, @papel
+		END
+	END
+	CLOSE cursor_peli05;
+	DEALLOCATE cursor_peli05;
+END
+
+EXEC peli05 @nombre_actor = 'Tom', @apellido_actor = 'Hank';
+
+
+--Ejercicio 06
+
+CREATE OR ALTER PROC peli06
+@peli NVARCHAR(200)
+AS
+BEGIN
+	
+	DECLARE @actor NVARCHAR(100),
+	@papel NVARCHAR(100)
+
+	IF NOT EXISTS(SELECT peli_id
+					FROM pelicula
+					WHERE peli_titulo = @peli)
+		BEGIN
+			THROW 50001, 'La película no existe en la base de datos.', 1;
+			RETURN;
+		END
+
+	DECLARE cursor_peli06 CURSOR FOR
+	SELECT CONCAT(actor.act_nombre, ' ', actor.act_apellidos), peli_elenco.papel
+	FROM pelicula
+	INNER JOIN peli_elenco ON peli_elenco.peli_id = pelicula.peli_id
+	INNER JOIN actor ON peli_elenco.act_id = actor.act_id
+	WHERE pelicula.peli_titulo = @peli
+
+	OPEN cursor_peli06;
+	FETCH NEXT FROM cursor_peli06 INTO @actor, @papel
+
+	IF(@@FETCH_STATUS = 0)
+	BEGIN
+		PRINT 'Lista de actores de ' + @peli;
+
+		WHILE(@@FETCH_STATUS = 0)
+		BEGIN
+			PRINT '	Actor: ' + @actor + ', Papel: ' + @papel
+			FETCH NEXT FROM cursor_peli06 INTO @actor, @papel
+		END
+	END
+	CLOSE cursor_peli06;
+	DEALLOCATE cursor_peli06;
+END
+
+EXEC peli06 @peli = 'Avengers: Endgame'
+
+SELECT * FROM critico
+SELECT * FROM valoracion
+SELECT * FROM pelicula
+SELECT * FROM actor
+SELECT * FROM peli_elenco
